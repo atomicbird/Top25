@@ -8,7 +8,7 @@
 
 import UIKit
 
-class MasterViewController: UITableViewController {
+class MasterViewController: UITableViewController, UITableViewDataSourcePrefetching {
 
     let feedManager = FeedManager()
 
@@ -17,6 +17,8 @@ class MasterViewController: UITableViewController {
         let reloadButton = UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(MasterViewController.reloadFeed))
         self.navigationItem.rightBarButtonItem = reloadButton
         
+        tableView.prefetchDataSource = self
+
         reloadFeed()
     }
 
@@ -41,6 +43,15 @@ class MasterViewController: UITableViewController {
         }
     }
 
+    func handleImageLoadForIndex(index:Int) -> Void {
+        DispatchQueue.main.async { 
+            let indexPath = IndexPath(row: index, section: 0)
+            if let _ = self.tableView.cellForRow(at: indexPath) {
+                self.tableView.reloadRows(at: [indexPath], with: .none)
+            }
+        }
+    }
+
     // MARK: - Table View
 
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -58,7 +69,26 @@ class MasterViewController: UITableViewController {
         cell.textLabel?.text = feedEntry.title
         cell.detailTextLabel?.text = feedEntry.artist
         
+        if let image = feedEntry.image {
+            cell.imageView?.image = image
+        } else {
+            feedManager.fetchImageAtIndex(index: indexPath.row, completion: { (index) in
+                self.handleImageLoadForIndex(index: index)
+            })
+        }
+
         return cell
+    }
+
+    // MARK: - UITableViewDataSourcePrefetching
+    func tableView(_ tableView: UITableView, prefetchRowsAt indexPaths: [IndexPath]) {
+        print("Prefetching rows \(indexPaths)")
+        indexPaths.forEach { self.feedManager.fetchImageAtIndex(index: $0.row) {(index) in } }
+    }
+    
+    func tableView(_ tableView: UITableView, cancelPrefetchingForRowsAt indexPaths: [IndexPath]) {
+        print("Cancelling prefetch for rows \(indexPaths)")
+        indexPaths.forEach { self.feedManager.cancelFetchImageAtIndex(index: $0.row) }
     }
 }
 

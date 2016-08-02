@@ -19,6 +19,8 @@ class FeedEntry {
     var storeURL : String?
     var imageURL : String?
     var artistURL : String?
+    var image : UIImage?
+    var imageTask : URLSessionDataTask?
     
     init(entry:AnyObject) {
         if let title = entry.value(forKeyPath: "title.label") as? String { self.title = title }
@@ -57,6 +59,40 @@ class FeedEntry {
         }
         if let price = entry.value(forKeyPath: "im:price.label") as? String { self.price = price }
         if let category = entry.value(forKeyPath: "category.attributes.label") as? String { self.category = category }
+    }
+    
+    func fetchImage(completion: (Bool) -> ()) -> Void {
+        guard image == nil else {
+            return
+        }
+        guard self.imageTask == nil else {
+            return
+        }
+        guard let imageURLString = self.imageURL,
+            let imageURL = URL(string:imageURLString) else {
+                return
+        }
+        
+        let imageTask = URLSession.shared.dataTask(with: imageURL) { (data:Data?, response:URLResponse?, error:NSError?) in
+            if let error = error, error.code != -999, error.domain != NSURLErrorDomain {
+                // Print the error unless it's a -999, which happens when the task is canceled.
+                print("Image load error: \(error)")
+            }
+            guard let imageData = data,
+                let newImage = UIImage(data: imageData) else {
+                    return
+            }
+            print("Image downloaded")
+            self.image = newImage
+            completion(true)
+        }
+        self.imageTask = imageTask
+        imageTask.resume()
+    }
+    
+    func cancelFetchImage() -> Void {
+        imageTask?.cancel()
+        imageTask = nil
     }
 }
 
@@ -101,5 +137,25 @@ class FeedManager {
             })
             task.resume()
         }
+    }
+
+    func fetchImageAtIndex(index:Int, completion:(Int) -> ()) -> Void {
+        guard index < feedEntries.count else {
+            return
+        }
+        
+        feedEntries[index].fetchImage { (success) in
+            if success {
+                completion(index)
+            }
+        }
+    }
+    
+    func cancelFetchImageAtIndex(index:Int) -> Void {
+        guard index < feedEntries.count else {
+            return
+        }
+        
+        feedEntries[index].cancelFetchImage()
     }
 }

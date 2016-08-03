@@ -11,6 +11,7 @@ import UIKit
 class MasterViewController: UITableViewController, UITableViewDataSourcePrefetching {
 
     let feedManager = FeedManager()
+    var expandedCellPaths = Set<NSIndexPath>()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -80,12 +81,19 @@ class MasterViewController: UITableViewController, UITableViewDataSourcePrefetch
             })
         }
 
+        cell.audioPlaybackView.isHidden = !expandedCellPaths.contains(indexPath)
+        
         return cell
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let cell = tableView.cellForRow(at: indexPath) as? StoreTrackTableViewCell {
             cell.audioPlaybackView.isHidden = !cell.audioPlaybackView.isHidden
+            if cell.audioPlaybackView.isHidden {
+                expandedCellPaths.remove(indexPath)
+            } else {
+                expandedCellPaths.insert(indexPath)
+            }
             tableView.beginUpdates()
             tableView.endUpdates()
             tableView.deselectRow(at: indexPath, animated: true)

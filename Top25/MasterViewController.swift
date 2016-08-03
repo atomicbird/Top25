@@ -17,6 +17,9 @@ class MasterViewController: UITableViewController, UITableViewDataSourcePrefetch
         let reloadButton = UIBarButtonItem(barButtonSystemItem: .refresh, target: self, action: #selector(MasterViewController.reloadFeed))
         self.navigationItem.rightBarButtonItem = reloadButton
         
+        tableView.rowHeight = UITableViewAutomaticDimension
+        tableView.estimatedRowHeight = 85
+        
         tableView.prefetchDataSource = self
 
         reloadFeed()
@@ -63,14 +66,14 @@ class MasterViewController: UITableViewController, UITableViewDataSourcePrefetch
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
+        let cell = tableView.dequeueReusableCell(withIdentifier: StoreTrackTableViewCell.defaultReuseIdentifier, for: indexPath) as! StoreTrackTableViewCell
 
         let feedEntry = feedManager.feedEntries[indexPath.row]
-        cell.textLabel?.text = feedEntry.title
-        cell.detailTextLabel?.text = feedEntry.artist
+        cell.trackArtistLabel.text = feedEntry.artist
+        cell.trackNameLabel.text = feedEntry.title
         
         if let image = feedEntry.image {
-            cell.imageView?.image = image
+            cell.trackAlbumArtworkView.image = image
         } else {
             feedManager.fetchImageAtIndex(index: indexPath.row, completion: { (index) in
                 self.handleImageLoadForIndex(index: index)
@@ -78,6 +81,15 @@ class MasterViewController: UITableViewController, UITableViewDataSourcePrefetch
         }
 
         return cell
+    }
+
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if let cell = tableView.cellForRow(at: indexPath) as? StoreTrackTableViewCell {
+            cell.audioPlaybackView.isHidden = !cell.audioPlaybackView.isHidden
+            tableView.beginUpdates()
+            tableView.endUpdates()
+            tableView.deselectRow(at: indexPath, animated: true)
+        }
     }
 
     // MARK: - UITableViewDataSourcePrefetching

@@ -11,7 +11,7 @@ import UIKit
 extension UITableViewCell {
     static var defaultReuseIdentifier : String {
         get {
-            return String(self)
+            return String(describing: self)
         }
     }
 }

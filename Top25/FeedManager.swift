@@ -30,8 +30,8 @@ class FeedEntry {
         if let collection = entry.value(forKeyPath: "im:collection.im:name.label") as? String { self.collection = collection }
         if let links = entry.value(forKeyPath: "link") as? NSArray {
             for link in links {
-                if let type = link.value(forKeyPath: "attributes.type") as? String,
-                    let linkURL = link.value(forKeyPath: "attributes.href") as? String {
+                if let type = (link as AnyObject).value(forKeyPath: "attributes.type") as? String,
+                    let linkURL = (link as AnyObject).value(forKeyPath: "attributes.href") as? String {
                     switch(type) {
                     case "audio/x-m4a":
                         self.audioPreviewURL = linkURL
@@ -49,9 +49,9 @@ class FeedEntry {
             // Get the largest image available at whatever size
             var imageHeight = 0
             for imageInfo in imagesInfo {
-                if let heightString = imageInfo.value(forKeyPath: "attributes.height") as? String, 
+                if let heightString = (imageInfo as AnyObject).value(forKeyPath: "attributes.height") as? String, 
                     let height = Int(heightString), height > imageHeight,
-                    let imageURL = imageInfo.value(forKeyPath: "label") as? String {
+                    let imageURL = (imageInfo as AnyObject).value(forKeyPath: "label") as? String {
                     imageHeight = height
                     self.imageURL = imageURL
                 }
@@ -61,7 +61,7 @@ class FeedEntry {
         if let category = entry.value(forKeyPath: "category.attributes.label") as? String { self.category = category }
     }
     
-    func fetchImage(completion: (Bool) -> ()) -> Void {
+    func fetchImage(completion: @escaping (Bool) -> ()) -> Void {
         guard image == nil else {
             return
         }
@@ -73,9 +73,8 @@ class FeedEntry {
                 return
         }
         
-        let imageTask = URLSession.shared.dataTask(with: imageURL) { (data:Data?, response:URLResponse?, error:NSError?) in
-            if let error = error, error.code != -999, error.domain != NSURLErrorDomain {
-                // Print the error unless it's a -999, which happens when the task is canceled.
+        let imageTask = URLSession.shared.dataTask(with: imageURL) { (data:Data?, response:URLResponse?, error: Error?) in
+            if let error = error {
                 print("Image load error: \(error)")
             }
             guard let imageData = data,
@@ -85,7 +84,7 @@ class FeedEntry {
             print("Image downloaded")
             self.image = newImage
             completion(true)
-        }
+        } 
         self.imageTask = imageTask
         imageTask.resume()
     }
@@ -103,10 +102,10 @@ class FeedManager {
     
     var feedEntries = [FeedEntry]()
     
-    func reloadFeed(completion: (Bool) -> ()) -> Void {
+    func reloadFeed(completion:  @escaping (Bool) -> ()) -> Void {
         if let url = URL(string: FeedManager.urlString) {
             
-            let task = URLSession.shared.dataTask(with: url, completionHandler: { (data:Data?, response:URLResponse?, error:NSError?) in
+            let task = URLSession.shared.dataTask(with: url, completionHandler: { (data:Data?, response:URLResponse?, error:Error?) in
                 var success = false
                 
                 self.feedEntries.removeAll()
@@ -126,7 +125,7 @@ class FeedManager {
                         let entries = json.value(forKeyPath: "feed.entry") as? NSArray
                     {
                         for entry in entries {
-                            let feedEntry = FeedEntry(entry: entry)
+                            let feedEntry = FeedEntry(entry: entry as AnyObject)
                             self.feedEntries.append(feedEntry)
                         }
                         success = true
@@ -139,7 +138,7 @@ class FeedManager {
         }
     }
 
-    func fetchImageAtIndex(index:Int, completion:(Int) -> ()) -> Void {
+    func fetchImageAtIndex(index:Int, completion:@escaping (Int) -> ()) -> Void {
         guard index < feedEntries.count else {
             return
         }

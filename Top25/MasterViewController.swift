@@ -11,7 +11,7 @@ import UIKit
 class MasterViewController: UITableViewController, UITableViewDataSourcePrefetching {
 
     let feedManager = FeedManager()
-    var expandedCellPaths = Set<NSIndexPath>()
+    var expandedCellPaths = Set<IndexPath>()
 
     override func viewDidLoad() {
         super.viewDidLoad()

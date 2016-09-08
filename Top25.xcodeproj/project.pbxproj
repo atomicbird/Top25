@@ -105,7 +105,6 @@
 				TargetAttributes = {
 					EE9FBAC11D515829000441B8 = {
 						CreatedOnToolsVersion = 8.0;
-						DevelopmentTeam = FZTVR399HK;
 						DevelopmentTeamName = "Atomic Bird, LLC";
 						ProvisioningStyle = Automatic;
 					};
@@ -270,6 +269,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = Top25/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.atomicbird.Top25;
@@ -282,6 +282,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				DEVELOPMENT_TEAM = "";
 				INFOPLIST_FILE = Top25/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.atomicbird.Top25;

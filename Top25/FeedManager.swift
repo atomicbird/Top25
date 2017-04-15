@@ -33,18 +33,18 @@ class FeedEntry {
         
         if let links = entry.value(forKeyPath: "link") as? Array<AnyObject> {
             for link in links {
-                if let type = link.value(forKeyPath: "attributes.type") as? String,
-                    let linkURL = link.value(forKeyPath: "attributes.href") as? String {
-                    switch(type) {
-                    case "audio/x-m4a":
-                        audioPreviewURL = linkURL
-                        break
-                    case "text/html":
-                        storeURL = linkURL
-                        break
-                    default:
-                        break
-                    }
+                guard let type = link.value(forKeyPath: "attributes.type") as? String,
+                    let linkURL = link.value(forKeyPath: "attributes.href") as? String else {
+                        continue
+                }
+                
+                switch(type) {
+                case "audio/x-m4a":
+                    audioPreviewURL = linkURL
+                case "text/html":
+                    storeURL = linkURL
+                default:
+                    break
                 }
             }
         }
@@ -53,16 +53,18 @@ class FeedEntry {
             // Get the largest image available at whatever size
             var imageHeight = 0
             for imageInfo in imagesInfo {
-                if let heightString = (imageInfo as AnyObject).value(forKeyPath: "attributes.height") as? String, 
+                guard let heightString = (imageInfo as AnyObject).value(forKeyPath: "attributes.height") as? String,
                     let height = Int(heightString), height > imageHeight,
-                    let imageURL = (imageInfo as AnyObject).value(forKeyPath: "label") as? String {
-                    imageHeight = height
-                    self.imageURL = imageURL
+                    let imageURL = (imageInfo as AnyObject).value(forKeyPath: "label") as? String else {
+                        continue
                 }
+                
+                imageHeight = height
+                self.imageURL = imageURL
             }
         }
-        if let price = entry.value(forKeyPath: "im:price.label") as? String { self.price = price }
-        if let category = entry.value(forKeyPath: "category.attributes.label") as? String { self.category = category }
+        price = entry.value(forKeyPath: "im:price.label") as? String
+        category = entry.value(forKeyPath: "category.attributes.label") as? String
         
         urlSession = session
     }
